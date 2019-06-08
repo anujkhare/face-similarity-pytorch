@@ -1,0 +1,13 @@
+dlib==19.17.0
+matplotlib==3.0.2
+numpy==1.14.4
+opencv-python==3.4.1.15
+pandas==0.24.2
+Pillow==5.3.0
+requests==2.22.0
+scikit-image==0.14.0
+scikit-learn==0.21.1
+sklearn==0.0
+tensorboardX==1.5
+torch==1.1.0
+torchvision==0.2.1
