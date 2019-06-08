@@ -1,16 +1,14 @@
-import cv2
-import numpy as np
-from typing import Tuple
-from PIL import Image
 import dlib
 import numpy as np
+import torchvision
+from PIL import Image
 
 
 class FaceCropTransform:
     def __init__(self, margin=0.2):
         self.detector = dlib.get_frontal_face_detector()
         self.margin = margin
-        
+
     def __call__(self, image: np.ndarray) -> np.ndarray:
         H, W = image.shape[:2]
         margin = self.margin
@@ -21,7 +19,7 @@ class FaceCropTransform:
             return image
 
         if len(rects) > 1:
-#             return image
+            #             return image
             # Take the max area rect
             rects = sorted(rects, reverse=True, key=lambda x: x.area())
 
@@ -35,18 +33,22 @@ class FaceCropTransform:
         left = max(0, left - int(w * margin))
         right = min(W, right + int(w * margin))
 
-        return image[top: bottom+1, left: right+1]
+        return image[top: bottom + 1, left: right + 1]
 
 
-def resize_and_pad_image(image: np.ndarray, max_h) -> Tuple[np.ndarray, float]:
-    # resize the image
-    scale = max_h / image.shape[0]
-    image = cv2.resize(image, (0,0), fx=scale, fy=scale)
+def get_transforms_inference():
+    return torchvision.transforms.Compose([
+        FaceCropTransform(margin=0.2),
+        torchvision.transforms.ToPILImage(),
+        torchvision.transforms.Resize((160, 160)),
+    ])
 
-    # pad to 32
-    h, w = image.shape[:2]
-    dh = 32 - h%32
-    dw = 32 - w%32
-    dh, dw = list(map(lambda x: x if x<32 else 0,[dh, dw]))
-    image = np.pad(image, ((0,dh),(0,dw),(0,0)),mode="constant",constant_values=255)
-    return image, scale
+
+def get_transforms_train(image_side):
+    return torchvision.transforms.Compose([
+        FaceCropTransform(margin=0.2),
+        torchvision.transforms.ToPILImage(),
+        torchvision.transforms.RandomHorizontalFlip(),
+        torchvision.transforms.RandomRotation(degrees=(-10, 10), resample=Image.BILINEAR),
+        torchvision.transforms.Resize((image_side, image_side)),
+    ])

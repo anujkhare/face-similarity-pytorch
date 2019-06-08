@@ -1,39 +1,8 @@
-from PIL import Image, ImageDraw, ImageFont
-from datetime import datetime
-from math import ceil, floor
-from skimage.util import montage
-from sklearn.metrics import confusion_matrix
-from tensorboardX import SummaryWriter
-from torch.autograd import Variable
-from torchvision.transforms import Compose
-from typing import *
-import copy 
-import cv2
-import glob
-import inspect
-import itertools
-import json
-import math
-import matplotlib.pyplot as plt 
-import multiprocessing
 import numpy as np
-import os
-import pandas as pd
-import pathlib
-import pickle
-import random 
-import scipy
-import sklearn
-import socket
-import string
-import time
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.nn.init as init
-import torch.optim as optim
 
-from src import dataset, preprocess, visualize
+from src import dataset
+
 
 def train_iter(batch, model, optimizer, loss_func, device) -> float:
     optimizer.zero_grad()
@@ -42,12 +11,11 @@ def train_iter(batch, model, optimizer, loss_func, device) -> float:
     feats1, feats2 = model(images1.cuda(device), images2.cuda(device))
     error = loss_func(feats1, feats2, labels.cuda(device))
 
-#     probs = model(images1.cuda(device), images2.cuda(device))
-#     error = loss_func(probs, labels.cuda(device))
     error.backward()
     optimizer.step()
 
     return error.data.cpu().numpy()
+
 
 def evaluate(dataloader_val, model, loss, device, n_iters=2):
     model.eval()
@@ -63,35 +31,26 @@ def evaluate(dataloader_val, model, loss, device, n_iters=2):
             images1, images2, labels = dataset.flatten(batch)
             feats1, feats2 = model(images1.cuda(device), images2.cuda(device))
             error += loss(feats1, feats2, labels.cuda(device))
-            
-#             probs = model(images1.cuda(device), images2.cuda(device))
-#             error += loss(probs, labels.cuda(device)).data.cpu().numpy()
-#             _, labels_pred = torch.max(probs, dim=1)
-#             cm_total += sklearn.metrics.confusion_matrix(labels.data.cpu().numpy(), labels_pred.data.cpu().numpy())
 
-#             # Plot the image
-#             visualize.visualize(batch, maxn=10)
-#             print('Prob', np.exp(probs[:, 1].data.cpu().numpy()))
-#             print('Pred', labels_pred)
-
-    error /= ix
+        error /= ix
 
     model.train(True)
     return error, cm_total
 
 
 def run_training_loop(
-    model,
-    dataloader_train, dataloader_val,
-    loss_func, optimizer,
-    writer, device, weights_folder,
-    iter_start=0, max_epochs=100, val_every=50, save_every=500,
+        model,
+        dataloader_train, dataloader_val,
+        loss_func, optimizer,
+        writer, device, weights_folder,
+        iter_start=0, max_epochs=100, val_every=50, save_every=500,
 ) -> None:
     iter_cntr = iter_start
+    epoch = 0
     model.train(True)
 
     try:
-        while True:
+        while epoch < max_epochs:
             for batch in dataloader_train:
                 iter_cntr += 1
 
@@ -105,14 +64,16 @@ def run_training_loop(
 
                 writer.add_scalar('train.loss', error_train, iter_cntr)
 
-                if iter_cntr%val_every==0:
+                if iter_cntr % val_every == 0:
                     error_val, cm = evaluate(
                         dataloader_val, model=model, loss=loss_func, device=device, n_iters=2
                     )
                     writer.add_scalar('val.loss', error_val, iter_cntr)
 
-                if iter_cntr%save_every==0:
-                    torch.save(model.state_dict(), "%s/feat-%d.pt"%(weights_folder,iter_cntr))
+                if iter_cntr % save_every == 0:
+                    torch.save(model.state_dict(), "%s/feat-%d.pt" % (weights_folder, iter_cntr))
+
+            epoch += 1
 
     except KeyboardInterrupt:
-        torch.save(model.state_dict(), "%s/feat-%d.pt"%(weights_folder,iter_cntr))
+        torch.save(model.state_dict(), "%s/feat-%d.pt" % (weights_folder, iter_cntr))

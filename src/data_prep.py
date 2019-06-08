@@ -19,5 +19,5 @@ def split_train_val(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     df = df.sample(frac=1, random_state=1111)
     n = len(df)
     n_train = int(0.8 * n)
-    df_train, df_val = df.iloc[:n_train], df.iloc[n_train: ]
+    df_train, df_val = df.iloc[:n_train], df.iloc[n_train:]
     return df_train, df_val

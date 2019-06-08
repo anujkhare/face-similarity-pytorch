@@ -1,20 +1,17 @@
 import argparse
 import cv2
-import torch
-import matplotlib.pyplot as plt
 import numpy as np
 import os
-import torchvision
+import torch
 
-from src.models import segnet
-from src import preprocess, dataset
+from src import models, preprocess
 
 
 def get_image_tensor(image_path: str, device, transforms) -> torch.Tensor:
     image = cv2.imread(image_path)
     if image is None:
         raise ValueError('Missing or corrupt image: {}'.format(image_path))
-    
+
     image = np.array(transforms(image))
     image = image.transpose(2, 0, 1).astype(np.float32)[np.newaxis, ...]
     return torch.from_numpy(image).to(device)
@@ -35,24 +32,8 @@ def predict(image_path1, image_path2, model, transforms, device):
     return dist, pred
 
 
-def parse_args() -> argparse.Namespace:
-    """
-    Parse the command line arguments.
-
-    Returns:
-        argparse.Namespace: contains the named arguments parsed.
-    """
-    parser = argparse.ArgumentParser(description="Face Similarity PyTorch")
-    parser.add_argument("-i1", "--image-path-1", help="Path to the first image", required=True, type=str,)
-    parser.add_argument("-i2", "--image-path-2", help="Path to the second image", required=True, type=str,)
-    parser.add_argument("-g", "--gpu", help="GPU ID to use. -1 for CPU.", required=False, type=int, default=-1)
-    parser.add_argument("-w", "--weight-path", help="Path to the trained model weights.", required=False, type=str, default="face-siamese.pt")
-    args = parser.parse_args()
-    return args
-
-
 def get_model(device, weight_path):
-    model = segnet.SiameseNetworkLarge(160).to(device)
+    model = models.SiameseNet(160).to(device)
     model.train(False)
     model.eval()
 
@@ -63,22 +44,31 @@ def get_model(device, weight_path):
     return model
 
 
-def get_transforms():
-    return torchvision.transforms.Compose([
-        preprocess.FaceCropTransform(margin=0.2),
-        torchvision.transforms.ToPILImage(),
-        torchvision.transforms.Resize((160, 160)),
-    ])
+def parse_args() -> argparse.Namespace:
+    """
+    Parse the command line arguments.
+
+    Returns:
+        argparse.Namespace: contains the named arguments parsed.
+    """
+    parser = argparse.ArgumentParser(description="Face Similarity PyTorch")
+    parser.add_argument("-i1", "--image-path-1", help="Path to the first image", required=True, type=str, )
+    parser.add_argument("-i2", "--image-path-2", help="Path to the second image", required=True, type=str, )
+    parser.add_argument("-g", "--gpu", help="GPU ID to use. -1 for CPU.", required=False, type=int, default=-1)
+    parser.add_argument("-w", "--weight-path", help="Path to the trained model weights.", required=False, type=str,
+                        default="face-siamese.pt")
+    args = parser.parse_args()
+    return args
 
 
 def main():
     args = parse_args()
     device = 'cpu'
     if args.gpu >= 0:
-        device='cuda:{}'.format(args.gpu)
+        device = 'cuda:{}'.format(args.gpu)
 
     model = get_model(device, args.weight_path)
-    transforms = get_transforms()
+    transforms = preprocess.get_transforms_inference()
     prob, pred = predict(args.image_path_1, args.image_path_2, model, transforms, device)
     print('Dis-similarity score: {:.2f}'.format(prob))
     if pred == 1:
@@ -86,6 +76,6 @@ def main():
     else:
         print('The two images are of different people!')
 
-        
+
 if __name__ == '__main__':
     main()

@@ -7,8 +7,8 @@ from src.dataset import flatten
 def visualize(batch, maxn=float('inf'), figsize=(50, 20)) -> None:
     images1, images2, labels = flatten(batch)
 
-    images1 = images1.data.cpu().numpy().transpose(0,2,3,1).astype(np.uint8)
-    images2 = images2.data.cpu().numpy().transpose(0,2,3,1).astype(np.uint8)
+    images1 = images1.data.cpu().numpy().transpose(0, 2, 3, 1).astype(np.uint8)
+    images2 = images2.data.cpu().numpy().transpose(0, 2, 3, 1).astype(np.uint8)
     maxn = min(maxn, images1.shape[0])
 
     images = []
