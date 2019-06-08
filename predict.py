@@ -12,7 +12,9 @@ def get_image_tensor(image_path: str, device, transforms) -> torch.Tensor:
     if image is None:
         raise ValueError('Missing or corrupt image: {}'.format(image_path))
 
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = np.array(transforms(image))
+    
     image = image.transpose(2, 0, 1).astype(np.float32)[np.newaxis, ...]
     return torch.from_numpy(image).to(device)
 
@@ -56,7 +58,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("-i2", "--image-path-2", help="Path to the second image", required=True, type=str, )
     parser.add_argument("-g", "--gpu", help="GPU ID to use. -1 for CPU.", required=False, type=int, default=-1)
     parser.add_argument("-w", "--weight-path", help="Path to the trained model weights.", required=False, type=str,
-                        default="face-siamese.pt")
+                        default="weights/face-siamese-crop.pt")
     args = parser.parse_args()
     return args
 
