@@ -11,7 +11,9 @@
     cd face-similarity-pytorch
     ```
 2. Install requirements:
-    `pip install -r requirements.txt`
+    ```
+    pip install -r requirements.txt
+    ```
 3. Run the inference script:
     ```bash
     python predict.py -i1 <path-to-image-1> -i2 <path-to-image-2>
@@ -23,4 +25,4 @@
 Use the jupyter notebook `train-siamese.ipynb`.
 
 ## Details
-gTg
+
