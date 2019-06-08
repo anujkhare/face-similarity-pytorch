@@ -1,5 +1,6 @@
 import pandas as pd
 import pathlib
+from typing import Tuple
 
 
 def get_df_from_folder(path: str) -> pd.DataFrame:
