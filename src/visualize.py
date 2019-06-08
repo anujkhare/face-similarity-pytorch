@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
+import numpy as np
 from skimage.util import montage
+from src.dataset import flatten
 
 
 def visualize(batch, maxn=float('inf'), figsize=(50, 20)) -> None:

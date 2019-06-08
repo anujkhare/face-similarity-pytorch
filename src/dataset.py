@@ -1,4 +1,11 @@
+import cv2
+import itertools
+import numpy as np
+import pandas as pd
 import torch
+from typing import Any, Dict, Tuple
+
+from src import preprocess
 
 
 class PairDataset:
@@ -27,7 +34,7 @@ class PairDataset:
 
         pos_pairs = []
         for list_idx_of_person in idx_by_person:
-            pairs = itertools.combinations(list_idx_of_person, 2)
+            pairs = itertools.permutations(list_idx_of_person, 2)  # order matters here
             pos_pairs.extend(pairs)
         np.random.shuffle(pos_pairs)
         
@@ -47,14 +54,14 @@ class PairDataset:
         return len(self.pos_pairs)
     
     def _sample_neg_pair(self, pos_pair) -> Tuple[int, int]:
-        idx = pos_pair[np.random.choice([0, 1])]
+        idx = pos_pair[0]
         label = self.labels[idx]
         neg_idx = np.random.choice(self.df.loc[self.df.label != label].index)
         return (idx, neg_idx)
     
     def _image(self, ix):
         image = self.images[ix]
-        image, _ = resize_and_pad_image(image, 256)
+        image, _ = preprocess.resize_and_pad_image(image, 256)
         image = image.transpose(2, 0, 1).astype(np.float32)[np.newaxis, ...]
         return image
         
