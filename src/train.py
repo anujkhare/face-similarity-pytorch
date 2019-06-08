@@ -78,3 +78,41 @@ def evaluate(dataloader_val, model, loss, device, n_iters=2):
 
     model.train(True)
     return error, cm_total
+
+
+def run_training_loop(
+    model,
+    dataloader_train, dataloader_val,
+    loss_func, optimizer,
+    writer, device, weights_folder,
+    iter_start=0, max_epochs=100, val_every=50, save_every=500,
+) -> None:
+    iter_cntr = iter_start
+    model.train(True)
+
+    try:
+        while True:
+            for batch in dataloader_train:
+                iter_cntr += 1
+
+                error_train = train_iter(
+                    batch=batch,
+                    model=model,
+                    optimizer=optimizer,
+                    loss_func=loss_func,
+                    device=device
+                )
+
+                writer.add_scalar('train.loss', error_train, iter_cntr)
+
+                if iter_cntr%val_every==0:
+                    error_val, cm = evaluate(
+                        dataloader_val, model=model, loss=loss_func, device=device, n_iters=2
+                    )
+                    writer.add_scalar('val.loss', error_val, iter_cntr)
+
+                if iter_cntr%save_every==0:
+                    torch.save(model.state_dict(), "%s/feat-%d.pt"%(weights_folder,iter_cntr))
+
+    except KeyboardInterrupt:
+        torch.save(model.state_dict(), "%s/feat-%d.pt"%(weights_folder,iter_cntr))

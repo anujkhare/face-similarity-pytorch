@@ -3,6 +3,8 @@ import itertools
 import numpy as np
 import pandas as pd
 import torch
+import torchvision
+from PIL import Image
 from typing import Any, Dict, Tuple
 
 from src import preprocess
@@ -18,7 +20,7 @@ class PairDataset:
         1. Positive pair: randomly pick any positive pair from all the available samples
         2. Negative pair: for one of the images picked for the positive pair, find a negative pair and add
     """
-    def __init__(self, df: pd.DataFrame) -> None:
+    def __init__(self, df: pd.DataFrame, image_side: int = 160) -> None:
         df.reset_index(inplace=True, drop=True)
         df.idx = df.index
 
@@ -43,6 +45,14 @@ class PairDataset:
         self.df = df
         self.labels = df.label.values
         self.images = [self._read_image(p) for p in df.path]
+        
+        self.transforms = torchvision.transforms.Compose([
+            preprocess.FaceCropTransform(margin=0.2),
+            torchvision.transforms.ToPILImage(),
+            torchvision.transforms.RandomHorizontalFlip(),
+            torchvision.transforms.RandomRotation(degrees=(-10, 10), resample=Image.BILINEAR),
+            torchvision.transforms.Resize((image_side, image_side)),
+        ])
     
     @staticmethod
     def _read_image(p: str) -> np.ndarray:
@@ -61,7 +71,7 @@ class PairDataset:
     
     def _image(self, ix):
         image = self.images[ix]
-        image, _ = preprocess.resize_and_pad_image(image, 256)
+        image = np.array(self.transforms(image))
         image = image.transpose(2, 0, 1).astype(np.float32)[np.newaxis, ...]
         return image
         
@@ -80,9 +90,9 @@ class PairDataset:
         }
 
 
-def get_dataloader(df, batch_size):
-    dataset = PairDataset(df.copy())
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=1)
+def get_dataloader(df, image_side: int, batch_size: int, num_workers: int = 4):
+    dataset = PairDataset(df.copy(), image_side=image_side)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     print('Training: {:,} total positive pairs {:,} mini batches'.format(len(dataset), len(dataloader)))
     return dataset, dataloader
 

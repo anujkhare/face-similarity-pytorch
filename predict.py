@@ -4,25 +4,26 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import torchvision
 
 from src.models import segnet
 from src import preprocess, dataset
 
 
-def get_image_tensor(image_path: str, device) -> torch.Tensor:
+def get_image_tensor(image_path: str, device, transforms) -> torch.Tensor:
     image = cv2.imread(image_path)
     if image is None:
         raise ValueError('Missing or corrupt image: {}'.format(image_path))
     
-    image, _ = preprocess.resize_and_pad_image(image, 256)
+    image = np.array(transforms(image))
     image = image.transpose(2, 0, 1).astype(np.float32)[np.newaxis, ...]
     return torch.from_numpy(image).to(device)
 
 
-def predict(image_path1, image_path2, model, device):
+def predict(image_path1, image_path2, model, transforms, device):
     THRESH = 1.2
-    images1 = get_image_tensor(image_path1, device)
-    images2 = get_image_tensor(image_path2, device)
+    images1 = get_image_tensor(image_path1, device, transforms)
+    images2 = get_image_tensor(image_path2, device, transforms)
 
     pred = 0
     with torch.no_grad():
@@ -51,7 +52,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def get_model(device, weight_path):
-    model = segnet.SiameseNetworkLarge(256).to(device)
+    model = segnet.SiameseNetworkLarge(160).to(device)
     model.train(False)
     model.eval()
 
@@ -62,6 +63,14 @@ def get_model(device, weight_path):
     return model
 
 
+def get_transforms():
+    return torchvision.transforms.Compose([
+        preprocess.FaceCropTransform(margin=0.2),
+        torchvision.transforms.ToPILImage(),
+        torchvision.transforms.Resize((160, 160)),
+    ])
+
+
 def main():
     args = parse_args()
     device = 'cpu'
@@ -69,7 +78,8 @@ def main():
         device='cuda:{}'.format(args.gpu)
 
     model = get_model(device, args.weight_path)
-    prob, pred = predict(args.image_path_1, args.image_path_2, model, device)
+    transforms = get_transforms()
+    prob, pred = predict(args.image_path_1, args.image_path_2, model, transforms, device)
     print('Dis-similarity score: {:.2f}'.format(prob))
     if pred == 1:
         print('The two images are of the same person!')
