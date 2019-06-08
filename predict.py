@@ -6,7 +6,7 @@ import numpy as np
 import os
 
 from src.models import segnet
-from src import preprocess
+from src import preprocess, dataset
 
 
 def get_image_tensor(image_path: str, device) -> torch.Tensor:
@@ -20,16 +20,18 @@ def get_image_tensor(image_path: str, device) -> torch.Tensor:
 
 
 def predict(image_path1, image_path2, model, device):
+    THRESH = 1.2
     images1 = get_image_tensor(image_path1, device)
     images2 = get_image_tensor(image_path2, device)
 
+    pred = 0
     with torch.no_grad():
-        probs = torch.exp(model(images1, images2))
-        _, pred = torch.max(probs, dim=-1)
-        pred = pred.data.cpu().numpy()[0]
-        prob = probs.data.cpu().numpy()[0][1]
-
-    return prob, pred
+        feats1, feats2 = model(images1, images2)
+        dist = torch.nn.functional.pairwise_distance(feats1, feats2)
+        dist = dist.data.cpu().numpy()[0]
+        if dist < THRESH:
+            pred = 1
+    return dist, pred
 
 
 def parse_args() -> argparse.Namespace:
@@ -48,23 +50,27 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
+def get_model(device, weight_path):
+    model = segnet.SiameseNetworkLarge(256).to(device)
+    model.train(False)
+    model.eval()
+
+    if not os.path.exists(weight_path):
+        raise FileNotFoundError('The weights must be present at: {}'.format(weight_path))
+    state_dict = torch.load(weight_path)
+    model.load_state_dict(state_dict)
+    return model
+
+
 def main():
     args = parse_args()
     device = 'cpu'
     if args.gpu >= 0:
         device='cuda:{}'.format(args.gpu)
 
-    model = segnet.SiameseNetworkLarge(256).to(device)
-    model.train(False)
-    model.eval()
-
-    if not os.path.exists(args.weight_path):
-        raise FileNotFoundError('The weights must be present at: {}'.format(args.weight_path))
-    state_dict = torch.load(args.weight_path)
-    model.load_state_dict(state_dict)
-
+    model = get_model(device, args.weight_path)
     prob, pred = predict(args.image_path_1, args.image_path_2, model, device)
-    print('Probability of being the same person: {:.2f}%'.format(prob * 100))
+    print('Dis-similarity score: {:.2f}'.format(prob))
     if pred == 1:
         print('The two images are of the same person!')
     else:

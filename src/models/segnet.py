@@ -98,7 +98,7 @@ class SiameseNetworkLarge(nn.Module):
             torch.nn.BatchNorm1d(128),
         )
 
-        self.classifier = torch.nn.Linear(128 * 3, 2)
+#         self.classifier = torch.nn.Linear(128 * 3, 2)
 
     def forward_once(self, x):
 #         print(x.shape)
@@ -112,6 +112,7 @@ class SiameseNetworkLarge(nn.Module):
         feat1 = self.forward_once(input1)
         feat2 = self.forward_once(input2)
 
-        feats = torch.cat([feat1, feat2, feat1 * feat2], dim=1)
-        preds = self.classifier(feats)
-        return torch.log_softmax(preds, dim=-1)
+        return feat1, feat2
+#         feats = torch.cat([feat1, feat2, feat1 * feat2], dim=1)
+#         preds = self.classifier(feats)
+#         return torch.log_softmax(preds, dim=-1)

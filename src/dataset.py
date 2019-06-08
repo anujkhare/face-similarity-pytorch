@@ -70,12 +70,13 @@ class PairDataset:
         neg_pair = self._sample_neg_pair(pos_pair)
         images1 = np.vstack([self._image(pos_pair[0]), self._image(neg_pair[0])])
         images2 = np.vstack([self._image(pos_pair[1]), self._image(neg_pair[1])])
-        labels = np.array([1, 0]).astype(np.long)
+        labels = np.array([1, 0]).astype(np.float32)
         
         return {
             'images1': images1,
             'images2': images2,
             'labels': labels,
+            'pairs': np.array([pos_pair, neg_pair])
         }
 
 

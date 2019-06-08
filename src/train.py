@@ -39,9 +39,11 @@ def train_iter(batch, model, optimizer, loss_func, device) -> float:
     optimizer.zero_grad()
 
     images1, images2, labels = dataset.flatten(batch)
-    probs = model(images1.cuda(device), images2.cuda(device))
+    feats1, feats2 = model(images1.cuda(device), images2.cuda(device))
+    error = loss_func(feats1, feats2, labels.cuda(device))
 
-    error = loss_func(probs, labels.cuda(device))
+#     probs = model(images1.cuda(device), images2.cuda(device))
+#     error = loss_func(probs, labels.cuda(device))
     error.backward()
     optimizer.step()
 
@@ -59,16 +61,20 @@ def evaluate(dataloader_val, model, loss, device, n_iters=2):
                 break
 
             images1, images2, labels = dataset.flatten(batch)
-            probs = model(images1.cuda(device), images2.cuda(device))
-            error += loss(probs, labels.cuda(device)).data.cpu().numpy()
+            feats1, feats2 = model(images1.cuda(device), images2.cuda(device))
+            error += loss(feats1, feats2, labels.cuda(device))
             
-            _, labels_pred = torch.max(probs, dim=1)
-            cm_total += sklearn.metrics.confusion_matrix(labels.data.cpu().numpy(), labels_pred.data.cpu().numpy())
+#             probs = model(images1.cuda(device), images2.cuda(device))
+#             error += loss(probs, labels.cuda(device)).data.cpu().numpy()
+#             _, labels_pred = torch.max(probs, dim=1)
+#             cm_total += sklearn.metrics.confusion_matrix(labels.data.cpu().numpy(), labels_pred.data.cpu().numpy())
 
-            # Plot the image
-            visualize.visualize(batch, maxn=10)
-            print('Prob', np.exp(probs[:, 1].data.cpu().numpy()))
-            print('Pred', labels_pred)
+#             # Plot the image
+#             visualize.visualize(batch, maxn=10)
+#             print('Prob', np.exp(probs[:, 1].data.cpu().numpy()))
+#             print('Pred', labels_pred)
+
+    error /= ix
 
     model.train(True)
     return error, cm_total
