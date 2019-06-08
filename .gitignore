@@ -186,8 +186,8 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
-# Soroco specific settings
-!.venv/pip.ini
-
 # Pycharm related
 .idea/
+
+
+*.pt
