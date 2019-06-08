@@ -59,7 +59,7 @@ class FeatNet(torch.nn.Module):
 
 
 class SiameseNet(nn.Module):
-    def __init__(self, input_side=256):
+    def __init__(self, input_side: int = 256) -> None:
         super().__init__()
 
         # calculate the size of the final feature map

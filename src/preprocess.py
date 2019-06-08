@@ -5,7 +5,7 @@ from PIL import Image
 
 
 class FaceCropTransform:
-    def __init__(self, margin=0.2):
+    def __init__(self, margin: float = 0.2) -> None:
         self.detector = dlib.get_frontal_face_detector()
         self.margin = margin
 
