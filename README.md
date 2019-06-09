@@ -16,7 +16,7 @@
     ```
 3. Run the inference script:
     ```bash
-    python predict.py -i1 <path-to-image-1> -i2 <path-to-image-2>
+    python predict.py -img1 <path-to-image-1> -img2 <path-to-image-2>
     ```
 
     Run `python predict.py --help` for more options.

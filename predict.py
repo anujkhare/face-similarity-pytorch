@@ -53,8 +53,8 @@ def parse_args() -> argparse.Namespace:
         argparse.Namespace: contains the named arguments parsed.
     """
     parser = argparse.ArgumentParser(description="Face Similarity PyTorch")
-    parser.add_argument("-i1", "--image-path-1", help="Path to the first image", required=True, type=str, )
-    parser.add_argument("-i2", "--image-path-2", help="Path to the second image", required=True, type=str, )
+    parser.add_argument("-img1", "--image-path-1", help="Path to the first image", required=True, type=str, )
+    parser.add_argument("-img2", "--image-path-2", help="Path to the second image", required=True, type=str, )
     parser.add_argument("-g", "--gpu", help="GPU ID to use. -1 for CPU.", required=False, type=int, default=-1)
     parser.add_argument("-w", "--weight-path", help="Path to the trained model weights.", required=False, type=str,
                         default="weights/face-siamese-crop.pt")
