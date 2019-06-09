@@ -72,11 +72,17 @@ positive pair.
 From the train set:
 
 ![Train preds](outputs/preds_train.png)
+
+From the val set:
+
 ![Val preds](outputs/preds_val.png)
+
+From the train set:
+
 ![Test preds](outputs/preds_test.png)
 
-### Notes
-#### The model is overfitting significantly!
+## Notes
+### The model is overfitting significantly!
 Loss curves:
 
 ![Train loss](outputs/train_loss.png)
@@ -92,7 +98,7 @@ Usinng threshold=1.5:
 | Test | 57.61% | 420 |
 
 
-#### Contrastive loss vs Triplet loss
+### Contrastive loss vs Triplet loss
 The [FaceNet]() paper as well as the implementation in
 [OpenFaces](https://openface-api.readtheoutputs.io) use a "triplet loss"
 for the metric learning. I chose
