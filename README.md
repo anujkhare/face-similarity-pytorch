@@ -58,7 +58,7 @@ We'll pick up pairs of images from the given set using the following strategy:
 
 Below are some sample pre-processed pairs:
 
-![image](docs/sample_images.png)
+![image](outputs/sample_images.png)
 
 Each row is a pair, every alternate row starting with the first is a
 positive pair.
@@ -67,12 +67,20 @@ positive pair.
 1. Find the predicted distances on validation set pairs
 2. Choose a distance threshold that maximizes the F1
 
+### Sample Outputs
+
+From the train set:
+
+![Train preds](outputs/preds_train.png)
+![Val preds](outputs/preds_val.png)
+![Test preds](outputs/preds_test.png)
+
 ### Notes
 #### The model is overfitting significantly!
 Loss curves:
 
-![Train loss](docs/train_loss.png)
-![Val loss](docs/val_loss.png)
+![Train loss](outputs/train_loss.png)
+![Val loss](outputs/val_loss.png)
 
 
 Usinng threshold=1.5:
@@ -86,7 +94,7 @@ Usinng threshold=1.5:
 
 #### Contrastive loss vs Triplet loss
 The [FaceNet]() paper as well as the implementation in
-[OpenFaces](https://openface-api.readthedocs.io) use a "triplet loss"
+[OpenFaces](https://openface-api.readtheoutputs.io) use a "triplet loss"
 for the metric learning. I chose
 
 ### Better sampling strategies
