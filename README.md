@@ -77,7 +77,7 @@ From the val set:
 
 ![Val preds](outputs/preds_val.png)
 
-From the train set:
+From the test set:
 
 ![Test preds](outputs/preds_test.png)
 
