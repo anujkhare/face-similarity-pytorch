@@ -19,8 +19,7 @@ def get_image_tensor(image_path: str, device, transforms) -> torch.Tensor:
     return torch.from_numpy(image).to(device)
 
 
-def predict(image_path1, image_path2, model, transforms, device):
-    THRESH = 1.2
+def predict(image_path1, image_path2, model, transforms, device, threshold):
     images1 = get_image_tensor(image_path1, device, transforms)
     images2 = get_image_tensor(image_path2, device, transforms)
 
@@ -29,7 +28,7 @@ def predict(image_path1, image_path2, model, transforms, device):
         feats1, feats2 = model(images1, images2)
         dist = torch.nn.functional.pairwise_distance(feats1, feats2)
         dist = dist.data.cpu().numpy()[0]
-        if dist < THRESH:
+        if dist < threshold:
             pred = 1
     return dist, pred
 
@@ -59,24 +58,38 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("-g", "--gpu", help="GPU ID to use. -1 for CPU.", required=False, type=int, default=-1)
     parser.add_argument("-w", "--weight-path", help="Path to the trained model weights.", required=False, type=str,
                         default="weights/face-siamese-crop.pt")
+    parser.add_argument('-t', '--threshold', help="Threshold to use for classifiaction", required=False, type=float, default=1.8)
     args = parser.parse_args()
     return args
 
 
 def main():
     args = parse_args()
+    
+    # Get the device
     device = 'cpu'
     if args.gpu >= 0:
         device = 'cuda:{}'.format(args.gpu)
 
+    # Initialize model and pre-processor
     model = get_model(device, args.weight_path)
     transforms = preprocess.get_transforms_inference()
-    prob, pred = predict(args.image_path_1, args.image_path_2, model, transforms, device)
+
+    # Predict!
+    prob, pred = predict(
+        image_path1=args.image_path_1,
+        image_path2=args.image_path_2,
+        model=model,
+        transforms=transforms,
+        device=device,
+        threshold=args.threshold,
+    )
+
     print('Dis-similarity score: {:.2f}'.format(prob))
     if pred == 1:
-        print('The two images are of the same person!')
+        print('Same person!')
     else:
-        print('The two images are of different people!')
+        print('Not the same person!')
 
 
 if __name__ == '__main__':
