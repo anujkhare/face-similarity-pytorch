@@ -67,13 +67,23 @@ positive pair.
 1. Find the predicted distances on validation set pairs
 2. Choose a distance threshold that maximizes the F1
 
-### Results
-
-#### Pair-wise precision/recall
-
-#### Loss curves
-
 ### Notes
+#### The model is overfitting significantly!
+Loss curves:
+
+![Train loss](docs/train_loss.png)
+![Val loss](docs/val_loss.png)
+
+
+Usinng threshold=1.5:
+
+| Data split | F1 | N-pairs |
+| --- | --- | --- |
+| Train | 98.74% | 12000 | 
+| Val |  93.81% | 12000 |
+| Test | 57.61% | 420 |
+
+
 #### Contrastive loss vs Triplet loss
 The [FaceNet]() paper as well as the implementation in
 [OpenFaces](https://openface-api.readthedocs.io) use a "triplet loss"
